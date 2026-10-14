@@ -26,7 +26,7 @@ async function validTwilioSignature(req: Request, params: URLSearchParams, token
   return expected === sig;
 }
 
-async function sendSms(env: Env, body: string): Promise<void> {
+async function sendSms(env: Env, body: string): Promise<boolean> {
   const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`, {
     method: "POST",
     headers: {
@@ -36,6 +36,7 @@ async function sendSms(env: Env, body: string): Promise<void> {
     body: new URLSearchParams({ To: env.ALLOWED_NUMBER, From: env.TWILIO_NUMBER, Body: body.slice(0, 1500) }),
   });
   if (!res.ok) console.error("twilio send failed", res.status, await res.text());
+  return res.ok;
 }
 
 const xmlEscape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -279,7 +280,7 @@ export default {
     });
     for (const page of q.results) {
       const title = page.properties.Name.title.map((t: any) => t.plain_text).join("");
-      await sendSms(env, `Reminder: ${title}`);
+      if (!(await sendSms(env, `Reminder: ${title}`))) continue; // leave unsent; retry next minute
       await notion(env, `/pages/${page.id}`, { properties: { Sent: { checkbox: true } } });
     }
   },
