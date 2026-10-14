@@ -1,0 +1,18 @@
+name = "sms-notion"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+TZ = "America/Chicago"
+MODEL = "claude-haiku-5-5"
+TODOS_DS = "4c44b0b0-d9aa-4b4f-aa35-d384b9518fcb"  # existing Personal Tasks database
+REMINDERS_DS = "7b8d41ac-1a24-4514-959b-16db22b39005"
+
+# Optional conversation memory. Run `npx wrangler kv namespace create HISTORY`,
+# paste the id below, and uncomment.
+# [[kv_namespaces]]
+# binding = "HISTORY"
+# id = "REPLACE_ME"
