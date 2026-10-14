@@ -10,6 +10,8 @@ Text a Twilio number from a basic phone; a Cloudflare Worker writes todos and re
 | `r 3pm call dentist` | Reminder today 3pm (tomorrow if already past) |
 | `r tomorrow 9am pay rent` | Reminder tomorrow 9am |
 | `r in 30m check oven` | Reminder in 30 minutes (`m`, `h`, `d`) |
+| `r 1530 call mom` / `r 15:30 ...` | 24-hour (military) time |
+| `r 3 call mom` | Ambiguous (1-11 with no am/pm): replies asking for am/pm, saves nothing |
 | anything else | Claude interprets it and calls the todo/reminder tools (needs `ANTHROPIC_API_KEY`; otherwise a help message is returned) |
 
 Only `ALLOWED_NUMBER` is answered. Other senders are ignored and unsigned requests get 403.

@@ -135,7 +135,7 @@ export function parseWhen(spec: string, now: Date, tz: string): Date | null {
 
 // ---------- Fast path (no Claude) ----------
 
-async function fastPath(env: Env, text: string): Promise<string | null> {
+export async function fastPath(env: Env, text: string): Promise<string | null> {
   let m = text.match(/^(?:todo|t)[:\s]+(.+)$/is);
   if (m) {
     await addTodo(env, m[1].trim());
@@ -144,6 +144,13 @@ async function fastPath(env: Env, text: string): Promise<string | null> {
   // "r 3pm call dentist" / "r tomorrow 9am call dentist" / "r in 30m check oven"
   m = text.match(/^(?:remind|r)[:\s]+((?:tomorrow\s+)?(?:in\s+\d+\s*\w+|\d{4}h?|\d{1,2}(?::\d{2})?\s*(?:am|pm)?))\s+(.+)$/is);
   if (m) {
+    // Hours 1-11 with no am/pm (and no leading zero) are ambiguous: ask instead of guessing.
+    const bare = m[1].trim().toLowerCase().match(/^(tomorrow\s+)?((?:[1-9]|1[01])(?::\d{2})?)$/);
+    if (bare) {
+      const pre = bare[1] ? "tomorrow " : "";
+      const body = m[2].trim();
+      return `Am or pm? Resend "r ${pre}${bare[2]}pm ${body}" or "r ${pre}${bare[2]}am ${body}". Nothing saved.`;
+    }
     const when = parseWhen(m[1], new Date(), env.TZ);
     if (when) {
       await addReminder(env, m[2].trim(), when);
