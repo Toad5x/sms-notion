@@ -109,9 +109,10 @@ function zonedToUtc(y: number, mo: number, d: number, h: number, mi: number, tz:
 const fmtLocal = (d: Date, tz: string) =>
   d.toLocaleString("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-/** Parses "in 30m", "in 2h", "3pm", "3:30pm", "15:00", optionally prefixed by "tomorrow". Returns null if unsure. */
-function parseWhen(spec: string, now: Date, tz: string): Date | null {
-  const s = spec.trim().toLowerCase();
+/** Parses "in 30m", "in 2h", "3pm", "3:30pm", "15:00", "1530", optionally prefixed by "tomorrow". Returns null if unsure. */
+export function parseWhen(spec: string, now: Date, tz: string): Date | null {
+  // Military time without a colon: "1530", "0900", "1530h" -> "15:30"
+  const s = spec.trim().toLowerCase().replace(/^(tomorrow\s+)?(\d{2})(\d{2})h?$/, "$1$2:$3");
   let m = s.match(/^in (\d+)\s*(m|min|mins|h|hr|hrs|d)$/);
   if (m) {
     const n = +m[1];
@@ -141,7 +142,7 @@ async function fastPath(env: Env, text: string): Promise<string | null> {
     return `Todo added: ${m[1].trim()}`;
   }
   // "r 3pm call dentist" / "r tomorrow 9am call dentist" / "r in 30m check oven"
-  m = text.match(/^(?:remind|r)[:\s]+((?:tomorrow\s+)?(?:in\s+\d+\s*\w+|\d{1,2}(?::\d{2})?\s*(?:am|pm)?))\s+(.+)$/is);
+  m = text.match(/^(?:remind|r)[:\s]+((?:tomorrow\s+)?(?:in\s+\d+\s*\w+|\d{4}h?|\d{1,2}(?::\d{2})?\s*(?:am|pm)?))\s+(.+)$/is);
   if (m) {
     const when = parseWhen(m[1], new Date(), env.TZ);
     if (when) {
